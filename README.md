@@ -10,15 +10,28 @@ Yet another write ahead log(yawal) is a simple read or append log library. It co
 * **Position** is the offset of a record in the file.
 
 ```mermaid
----
-title: Log Data Struture 
----
 classDiagram
+    class Log {
+        + Append(record *api.Record) (uint64, error)
+        + Read(offset uint64) (*api.Record, error)
+    }
+
+    class Segment {
+        + Append(record *api.Record) (uint64, error)
+        + Read(offset uint64) (*api.Record, error)
+    }
+
+    class Index {
+        + Read(offset uint64) (uint64, uint64, error)
+        + Write(offset uint64, position uint64) error
+    }
+
+    class Store {
+        + Append(data []byte) (uint64, uint64, error)
+        + Read(pos uint64) ([]byte, error)
+    }
+
     Log "1" *-- "n" Segment
     Segment *-- Index
     Segment *-- Store
-    
-    class Log {
-        + Append(record *api.Record) (uint64, error)
-    }
 ```
