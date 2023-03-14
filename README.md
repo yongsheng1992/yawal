@@ -10,9 +10,31 @@ Yet another write ahead log(yawal) is a simple read or append log library. It co
 * **Position** is the offset of a record in the file.
 
 ```mermaid
-flowchart TD;
-     A-->B;
-     A-->C;
-     B-->D;
-     C-->D;
+---
+title: Animal example
+---
+classDiagram
+    note "From Duck till Zebra"
+    Animal <|-- Duck
+    note for Duck "can fly\ncan swim\ncan dive\ncan help in debugging"
+    Animal <|-- Fish
+    Animal <|-- Zebra
+    Animal : +int age
+    Animal : +String gender
+    Animal: +isMammal()
+    Animal: +mate()
+    class Duck{
+        +String beakColor
+        +swim()
+        +quack()
+    }
+    class Fish{
+        -int sizeInFeet
+        -canEat()
+    }
+    class Zebra{
+        +bool is_wild
+        +run()
+    }
+
 ```
