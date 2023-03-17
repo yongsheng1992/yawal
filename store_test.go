@@ -54,7 +54,7 @@ func TestStoreWriteAndRead(t *testing.T) {
 	testRead(t, store)
 }
 
-func testWrite(t *testing.T, s Store) {
+func testWrite(t *testing.T, s *Store) {
 	t.Helper()
 	for i := 0; i < 4; i++ {
 		n, pos, err := s.Write([]byte(msg))
@@ -63,7 +63,7 @@ func testWrite(t *testing.T, s Store) {
 	}
 }
 
-func testRead(t *testing.T, s Store) {
+func testRead(t *testing.T, s *Store) {
 	t.Helper()
 	for i := 0; i < 4; i++ {
 		pos := width * uint64(i)

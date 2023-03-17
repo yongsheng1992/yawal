@@ -14,32 +14,24 @@ const (
 	lenWidth = 8
 )
 
-type Store interface {
-	// Read bytes at the pos in the file.
-	Read(pos uint64) ([]byte, error)
-	// Write data. It returns the bytes of data write, and the position of the data places
-	Write(data []byte) (n uint64, pos uint64, err error)
-}
-
-type FileStore struct {
+type Store struct {
 	*os.File
 	mu   sync.Mutex
 	size uint64
 }
 
-func newFileStore(f *os.File) (Store, error) {
+func newFileStore(f *os.File) (*Store, error) {
 	fi, err := os.Stat(f.Name())
 	if err != nil {
 		return nil, err
 	}
-
-	return &FileStore{
+	return &Store{
 		File: f,
 		size: uint64(fi.Size()),
 	}, nil
 }
 
-func (s *FileStore) Size() (uint64, error) {
+func (s *Store) Size() (uint64, error) {
 	fi, err := os.Stat(s.File.Name())
 	if err != nil {
 		return 0, err
@@ -47,7 +39,7 @@ func (s *FileStore) Size() (uint64, error) {
 	return uint64(fi.Size()), nil
 }
 
-func (s *FileStore) Read(pos uint64) ([]byte, error) {
+func (s *Store) Read(pos uint64) ([]byte, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	//if err := s.File.Sync(); err != nil {
@@ -64,7 +56,7 @@ func (s *FileStore) Read(pos uint64) ([]byte, error) {
 	return data, nil
 }
 
-func (s *FileStore) Write(data []byte) (n uint64, pos uint64, err error) {
+func (s *Store) Write(data []byte) (n uint64, pos uint64, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -78,11 +70,20 @@ func (s *FileStore) Write(data []byte) (n uint64, pos uint64, err error) {
 		return 0, 0, err
 	}
 	s.size += uint64(w)
-	//if err := s.buf.Flush(); err != nil {
-	//	return 0, 0, err
-	//}
+	// todo Use fdatasync instead of fsync. Cause MacOS does not support fdatasync immediately, so there is no
+	// need to support fdatasync at early version.
 	if err := s.File.Sync(); err != nil {
 		return 0, 0, err
 	}
+
 	return uint64(w), pos, err
+}
+
+func (s *Store) Close() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := s.File.Close(); err != nil {
+		return err
+	}
+	return nil
 }
