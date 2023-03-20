@@ -20,7 +20,7 @@ type Store struct {
 	size uint64
 }
 
-func newFileStore(f *os.File) (*Store, error) {
+func newStore(f *os.File) (*Store, error) {
 	fi, err := os.Stat(f.Name())
 	if err != nil {
 		return nil, err

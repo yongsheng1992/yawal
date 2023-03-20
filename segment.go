@@ -38,11 +38,11 @@ func newSegment(dir string, baseOffset uint64, config Config) (*Segment, error) 
 	if err != nil {
 		return nil, err
 	}
-	store, err := newFileStore(storeFile)
+	store, err := newStore(storeFile)
 	if err != nil {
 		return nil, err
 	}
-	index, err := newFileIndex(indexFile, config)
+	index, err := newIndex(indexFile, config)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +62,11 @@ func (s *Segment) Append(record *log_v1.Record) (uint64, error) {
 	cur := s.nextOffset
 	record.Offset = cur
 	data, err := proto.Marshal(record)
+
+	if s.store.size+uint64(len(data)) > s.config.MaxSegmentSize {
+		return 0, ErrExceededMaxSegmentSize
+	}
+
 	if err != nil {
 		return 0, err
 	}
@@ -71,7 +76,7 @@ func (s *Segment) Append(record *log_v1.Record) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if int(n) != len(data) {
+	if int(n) != len(data)+lenWidth {
 		return 0, errors.New("write data error")
 	}
 	if err := s.index.Write(cur-s.baseOffset, pos); err != nil {
@@ -110,6 +115,7 @@ func (s *Segment) Close() error {
 	}
 	return nil
 }
+
 func (s *Segment) Remove() error {
 	if err := s.Close(); err != nil {
 		return err
@@ -121,4 +127,16 @@ func (s *Segment) Remove() error {
 		return err
 	}
 	return nil
+}
+
+func (s *Segment) IndexFileName() string {
+	return s.index.Name()
+}
+
+func (s *Segment) StoreFileName() string {
+	return s.store.Name()
+}
+
+func (s *Segment) Size() uint64 {
+	return s.store.size
 }

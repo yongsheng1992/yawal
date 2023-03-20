@@ -16,7 +16,7 @@ func TestIndexWriteAndRead(t *testing.T) {
 			MaxIndexSize: 1024 * 4,
 		},
 	}
-	idx, err := newFileIndex(f, config)
+	idx, err := newIndex(f, config)
 	require.NoError(t, err)
 	defer idx.Close()
 

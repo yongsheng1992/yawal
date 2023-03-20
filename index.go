@@ -19,7 +19,7 @@ type Index struct {
 	mmap mmap.MMap
 }
 
-func newFileIndex(f *os.File, config Config) (*Index, error) {
+func newIndex(f *os.File, config Config) (*Index, error) {
 	fi, err := os.Stat(f.Name())
 	if err != nil {
 		return nil, err
