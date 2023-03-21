@@ -27,6 +27,9 @@ func NewLog(dir string, config Config) (*Log, error) {
 
 	baseOffsets := make([]uint64, 0)
 	for _, entry := range dirEntries {
+		if path.Ext(entry.Name()) != ".store" {
+			continue
+		}
 		offsetStr := strings.Trim(entry.Name(), path.Ext(entry.Name()))
 		offset, err := strconv.ParseUint(offsetStr, 10, 0)
 		if err != nil {
@@ -51,7 +54,6 @@ func NewLog(dir string, config Config) (*Log, error) {
 			return nil, err
 		}
 		log.segments = append(log.segments, seg)
-		i++
 	}
 
 	n := len(log.segments)

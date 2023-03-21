@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"math/rand"
 	"os"
@@ -46,7 +45,6 @@ func randStr(n int) string {
 func TestStoreWriteAndRead(t *testing.T) {
 	f, err := os.CreateTemp("", "test_store_write_and_read")
 	require.NoError(t, err)
-	fmt.Println(f.Name())
 	defer os.RemoveAll(f.Name())
 	store, err := newStore(f)
 	require.NoError(t, err)

@@ -23,7 +23,7 @@ type Segment struct {
 
 func newSegment(dir string, baseOffset uint64, config Config) (*Segment, error) {
 	storeFile, err := os.OpenFile(
-		path.Join(dir, fmt.Sprintf("%d.store", baseOffset)),
+		path.Join(dir, fmt.Sprintf("%012d.store", baseOffset)),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND,
 		0644,
 	)
@@ -31,7 +31,7 @@ func newSegment(dir string, baseOffset uint64, config Config) (*Segment, error) 
 		return nil, err
 	}
 	indexFile, err := os.OpenFile(
-		path.Join(dir, fmt.Sprintf("%d.index", baseOffset)),
+		path.Join(dir, fmt.Sprintf("%012d.index", baseOffset)),
 		os.O_RDWR|os.O_CREATE|os.O_APPEND,
 		0644,
 	)
