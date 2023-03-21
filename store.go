@@ -1,4 +1,4 @@
-package yawal
+package log
 
 import (
 	"encoding/binary"

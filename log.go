@@ -1,4 +1,4 @@
-package yawal
+package log
 
 import (
 	log_v1 "github.com/yongsheng1992/yawal/api/v1"

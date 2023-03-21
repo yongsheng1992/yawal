@@ -1,4 +1,4 @@
-package yawal
+package log
 
 type SegmentConfig struct {
 	MaxSegmentSize uint64
