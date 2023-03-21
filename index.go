@@ -12,7 +12,6 @@ const (
 	entWidth = offWidth + posWidth
 )
 
-// FileIndex the binary structure is 8 bits of index and 8 bit of position, so a record index occupied 16 bits.
 type Index struct {
 	*os.File
 	size uint64
@@ -24,6 +23,10 @@ func newIndex(f *os.File, config Config) (*Index, error) {
 	if err != nil {
 		return nil, err
 	}
+	idx := &Index{
+		File: f,
+		size: uint64(fi.Size()),
+	}
 	if err := os.Truncate(f.Name(), int64(config.SegmentConfig.MaxIndexSize)); err != nil {
 		return nil, err
 	}
@@ -31,11 +34,7 @@ func newIndex(f *os.File, config Config) (*Index, error) {
 	if err != nil {
 		return nil, err
 	}
-	idx := &Index{
-		File: f,
-		size: uint64(fi.Size()),
-		mmap: m,
-	}
+	idx.mmap = m
 	return idx, nil
 }
 
@@ -43,7 +42,6 @@ func (idx *Index) Read(off uint64) (n uint64, pos uint64, err error) {
 	if idx.size == 0 {
 		return 0, 0, io.EOF
 	}
-
 	posInIndex := off * entWidth
 	if posInIndex > idx.size {
 		return 0, 0, io.EOF
@@ -72,9 +70,25 @@ func (idx *Index) Close() error {
 	if err := idx.mmap.Flush(); err != nil {
 		return err
 	}
+	if err := os.Truncate(idx.File.Name(), int64(idx.size)); err != nil {
+		return err
+	}
+
 	return idx.mmap.Unmap()
 }
 
 func (idx *Index) Size() uint64 {
 	return idx.size
+}
+
+func (idx *Index) Last() (uint64, error) {
+	if idx.size == 0 {
+		return 0, io.EOF
+	}
+	pos := (idx.size/entWidth - 1) * entWidth
+	if pos+entWidth > idx.size {
+		return 0, io.EOF
+	}
+	n := endian.Uint64(idx.mmap[pos : pos+offWidth])
+	return n, nil
 }

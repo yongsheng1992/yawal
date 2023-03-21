@@ -44,12 +44,14 @@ func NewLog(dir string, config Config) (*Log, error) {
 		Config:   config,
 		Dir:      dir,
 	}
-	for _, baseOffset := range baseOffsets {
+	for i := 0; i < len(baseOffsets); i++ {
+		baseOffset := baseOffsets[i]
 		seg, err := newSegment(dir, baseOffset, config)
 		if err != nil {
 			return nil, err
 		}
 		log.segments = append(log.segments, seg)
+		i++
 	}
 
 	n := len(log.segments)
@@ -94,7 +96,22 @@ func (l *Log) Read(offset uint64) ([]byte, error) {
 	if offset >= l.activeSegment.nextOffset {
 		return nil, ErrIllegalOffsetRange
 	}
-	record, err := l.activeSegment.Read(offset)
+
+	target := l.activeSegment
+	var i int
+	if offset < l.activeSegment.baseOffset {
+		for i = 0; i < len(l.segments); i++ {
+			if offset >= l.segments[i].baseOffset && offset < l.segments[i].nextOffset {
+				break
+			}
+		}
+		if i == len(l.segments) {
+			return nil, ErrIllegalOffsetRange
+		}
+		target = l.segments[i]
+	}
+	record, err := target.Read(offset)
+
 	if err != nil {
 		return nil, err
 	}
@@ -119,5 +136,28 @@ func (l *Log) Close() error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (l *Log) Compact(offset uint64) error {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if offset > l.activeSegment.nextOffset {
+		return ErrIllegalOffsetRange
+	}
+
+	var i int
+	for i = 0; i < len(l.segments); i++ {
+		seg := l.segments[i]
+		if seg.nextOffset < offset {
+			if err := seg.Remove(); err != nil {
+				return err
+			}
+		} else {
+			break
+		}
+	}
+	l.segments = l.segments[i+1:]
 	return nil
 }

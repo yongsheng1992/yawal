@@ -53,6 +53,9 @@ func newSegment(dir string, baseOffset uint64, config Config) (*Segment, error) 
 		baseOffset: baseOffset,
 		nextOffset: baseOffset,
 	}
+	if last, err := index.Last(); err == nil {
+		segment.nextOffset = baseOffset + last + 1
+	}
 	return segment, nil
 }
 
